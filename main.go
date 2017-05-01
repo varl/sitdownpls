@@ -16,6 +16,11 @@ type GuestFormat struct {
     Gender string `json:"gender"`
 }
 
+type Table struct {
+    Seats int
+    Guests []GuestFormat
+}
+
 func (a *UnitFormat) UnmarshalJSON(b []byte) error {
     var s []GuestFormat
     if err := json.Unmarshal(b, &s); err != nil {
@@ -29,6 +34,21 @@ func round(float float64) float64 {
     return math.Floor(float + 0.5)
 }
 
+func grab(amount int, groups []UnitFormat) []GuestFormat {
+    var totBoys, totGirls, totAll int
+
+    tableGuests := make([]GuestFormat, amount)
+
+    for i := 0; totAll < amount; i++ {
+        unit := groups[i].Unit
+        totAll += len(unit)
+    }
+
+    fmt.Println(totBoys, totGirls, totAll, len(tableGuests))
+
+    return tableGuests
+}
+
 func main() {
     file, err := os.Open("guest-list.json")
 
@@ -37,8 +57,7 @@ func main() {
     }
     defer file.Close()
 
-    var units []UnitFormat
-    fmt.Println(units)
+    var units = make([]UnitFormat, 0)
     err = json.NewDecoder(file).Decode(&units)
 
     if err != nil {
@@ -64,7 +83,8 @@ func main() {
     }
 
     guestsPerTable := 6.0
-    tableCount := guestCount / guestsPerTable
+    tableCount := int(round(guestCount / guestsPerTable))
+    lastTableGuestCount := int(math.Mod(guestCount, guestsPerTable))
 
     fmt.Println("\nStatistics")
     fmt.Println("----------")
@@ -73,7 +93,23 @@ func main() {
     fmt.Println("Girls\t\t\t", femaleCount)
     fmt.Println("")
     fmt.Println("Guest count:\t\t", guestCount)
-    fmt.Println("Guests per table:\t", math.Ceil(guestsPerTable))
-    fmt.Println("Table count:\t\t", round(tableCount))
-    fmt.Println("...one table with:\t", math.Mod(guestCount, guestsPerTable))
+    fmt.Println("Guests per table:\t", guestsPerTable)
+    fmt.Println("Table count:\t\t", tableCount)
+    fmt.Println("...one table with:\t", lastTableGuestCount)
+    fmt.Println("")
+
+    tables := make([]Table, tableCount)
+
+    for i := 0; i < tableCount; i++ {
+        var count int
+        if i != tableCount-1 {
+            count = int(guestsPerTable)
+        } else {
+            count = int(lastTableGuestCount)
+        }
+        guests := grab(count, units)
+        tables[i] = Table{Seats: count, Guests: guests}
+    }
+
+    fmt.Println(tables)
 }
