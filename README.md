@@ -20,7 +20,7 @@ support bigamy atm.
 [
     [
         { "name": "Jane Doe", "gender": "female" },
-        { "name": "John Doe" "gender": "male" }
+        { "name": "John Doe", "gender": "male" }
     ]
 ]
 ```
