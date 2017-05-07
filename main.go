@@ -125,13 +125,13 @@ func sitDownPlease(units []UnitFormat, seats int) []Table {
 
         var allocated []GuestFormat
 
-        fmt.Println("New table", tableCount+1)
+        //fmt.Println("New table", tableCount+1)
         i := 0
         for {
-            fmt.Println("..Current length", len(munits))
-            fmt.Println("..Current index", i)
-            fmt.Println("..Units", munits)
-            fmt.Println("..Seats left", seats - len(allocated))
+            //fmt.Println("..Current length", len(munits))
+            //fmt.Println("..Current index", i)
+            //fmt.Println("..Units", munits)
+            //fmt.Println("..Seats left", seats - len(allocated))
 
             if len(allocated) == seats {
                 break
@@ -143,10 +143,10 @@ func sitDownPlease(units []UnitFormat, seats int) []Table {
 
             unit := munits[i]
             if (len(allocated) + len(unit.Unit)) > seats {
-                fmt.Println("/!\\ Hold up /!\\")
-                fmt.Println("We're about to run out of chairs, find another unit, bro!")
-                fmt.Println("Tried to add", unit.Unit)
-                fmt.Print()
+                //fmt.Println("/!\\ Hold up /!\\")
+                //fmt.Println("We're about to run out of chairs, find another unit, bro!")
+                //fmt.Println("Tried to add", unit.Unit)
+                //fmt.Print()
                 i++
                 continue
             }
@@ -154,16 +154,15 @@ func sitDownPlease(units []UnitFormat, seats int) []Table {
             for _, guest := range unit.Unit {
                 allocated = append(allocated, guest)
                 sorted++
-                fmt.Println("....Added guest", guest.Name, sorted)
-                fmt.Println("....Seats left", seats - len(allocated))
+                //fmt.Println("....Added guest", guest.Name, sorted)
+                //fmt.Println("....Seats left", seats - len(allocated))
             }
 
-            fmt.Println("..Remove", munits[i])
+            //fmt.Println("..Remove", munits[i])
             munits = append(munits[:i], munits[i+1:]...)
         }
 
         tableCount++
-        fmt.Println()
         tables = append(tables, Table{Seats: len(allocated), Guests: allocated})
     }
 
@@ -205,7 +204,7 @@ func main() {
         }
     }
 
-    guestsPerTable := 6
+    guestsPerTable := 7
 
     fmt.Println("\nStatistics")
     fmt.Println("----------")
