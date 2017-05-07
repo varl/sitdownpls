@@ -3,8 +3,10 @@ package main
 import (
     "encoding/json"
     "fmt"
-    "os"
     "math"
+    "math/rand"
+    "os"
+    "time"
 )
 
 type UnitFormat struct {
@@ -34,7 +36,28 @@ func round(float float64) float64 {
     return math.Floor(float + 0.5)
 }
 
-func grab(amount int, groups []UnitFormat) []GuestFormat {
+func shuffle(slice []UnitFormat) []UnitFormat {
+    for i := len(slice) - 1; i > 0; i-- {
+        j := rand.Intn(i + 1)
+        slice[i], slice[j] = slice[j], slice[i]
+    }
+    return slice
+}
+
+func flatten(slice []UnitFormat) []GuestFormat {
+    result := make([]GuestFormat, 0)
+    for i := range slice {
+        unit := slice[i].Unit
+        result = append(result, unit[0])
+        if len(unit) > 1 {
+            result = append(result, unit[1])
+        }
+    }
+    return result
+}
+
+/*
+func grab(amount int, guestList []GuestFormat) []GuestFormat {
     var totBoys, totGirls, totAll int
 
     tableGuests := make([]GuestFormat, amount)
@@ -48,8 +71,11 @@ func grab(amount int, groups []UnitFormat) []GuestFormat {
 
     return tableGuests
 }
+*/
 
 func main() {
+    rand.Seed( time.Now().UTC().UnixNano())
+
     file, err := os.Open("guest-list.json")
 
     if err != nil {
@@ -59,6 +85,8 @@ func main() {
 
     var units = make([]UnitFormat, 0)
     err = json.NewDecoder(file).Decode(&units)
+
+    units = shuffle(units)
 
     if err != nil {
         panic(err)
@@ -100,16 +128,37 @@ func main() {
 
     tables := make([]Table, tableCount)
 
+    guestList := flatten(units)
+
+    start := 0
     for i := 0; i < tableCount; i++ {
         var count int
+
         if i != tableCount-1 {
             count = int(guestsPerTable)
         } else {
             count = int(lastTableGuestCount)
         }
-        guests := grab(count, units)
+
+        guests := guestList[start:start + count]
         tables[i] = Table{Seats: count, Guests: guests}
+        start += count
     }
 
-    fmt.Println(tables)
+    for i, table := range tables {
+        fmt.Println("Table", i + 1)
+        fmt.Println("-------")
+        females := 0
+        males := 0
+        for _, guest := range table.Guests {
+            fmt.Println(guest.Name)
+            if guest.Gender == "male" {
+                males = males + 1
+            } else {
+                females = females + 1
+            }
+        }
+        fmt.Printf("Girls: %d, Boys: %d\n", females, males)
+        fmt.Println("")
+    }
 }
