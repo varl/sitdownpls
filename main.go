@@ -73,6 +73,103 @@ func grab(amount int, guestList []GuestFormat) []GuestFormat {
 }
 */
 
+/*
+func sitDownPlease(units []UnitFormat, seats int) []Table {
+    tables := make([]Table, 0)
+    munits := make([]UnitFormat, len(units))
+    copy(munits, units)
+
+    for {
+        if len(munits) == 0 {
+            break
+        }
+
+        // keep creating tables until we don't have any more fools
+        var allocated []GuestFormat
+
+        for i := 0; i < seats; {
+            if len(munits) == 0 {
+                break
+            }
+            unit := munits[0].Unit
+
+            for _, guest := range unit {
+                fmt.Println("Added guest", guest.Name)
+                allocated = append(allocated, guest)
+                i++
+            }
+
+            munits = append(munits[:0], munits[1:]...)
+        }
+
+        tables = append(tables, Table{Seats: len(allocated), Guests: allocated})
+    }
+
+
+    return tables
+}
+*/
+
+func sitDownPlease(units []UnitFormat, seats int) []Table {
+    tables := make([]Table, 0)
+    munits := make([]UnitFormat, len(units))
+    copy(munits, units)
+
+    sorted := 0
+    tableCount := 0
+
+    for {
+        if len(munits) == 0 {
+            break
+        }
+
+        var allocated []GuestFormat
+
+        fmt.Println("New table", tableCount+1)
+        i := 0
+        for {
+            fmt.Println("..Current length", len(munits))
+            fmt.Println("..Current index", i)
+            fmt.Println("..Units", munits)
+            fmt.Println("..Seats left", seats - len(allocated))
+
+            if len(allocated) == seats {
+                break
+            }
+
+            if i == len(munits) {
+                break
+            }
+
+            unit := munits[i]
+            if (len(allocated) + len(unit.Unit)) > seats {
+                fmt.Println("/!\\ Hold up /!\\")
+                fmt.Println("We're about to run out of chairs, find another unit, bro!")
+                fmt.Println("Tried to add", unit.Unit)
+                fmt.Print()
+                i++
+                continue
+            }
+
+            for _, guest := range unit.Unit {
+                allocated = append(allocated, guest)
+                sorted++
+                fmt.Println("....Added guest", guest.Name, sorted)
+                fmt.Println("....Seats left", seats - len(allocated))
+            }
+
+            fmt.Println("..Remove", munits[i])
+            munits = append(munits[:i], munits[i+1:]...)
+        }
+
+        tableCount++
+        fmt.Println()
+        tables = append(tables, Table{Seats: len(allocated), Guests: allocated})
+    }
+
+    return tables
+}
+
 func main() {
     rand.Seed( time.Now().UTC().UnixNano())
 
@@ -85,8 +182,6 @@ func main() {
 
     var units = make([]UnitFormat, 0)
     err = json.NewDecoder(file).Decode(&units)
-
-    units = shuffle(units)
 
     if err != nil {
         panic(err)
@@ -110,9 +205,7 @@ func main() {
         }
     }
 
-    guestsPerTable := 6.0
-    tableCount := int(round(guestCount / guestsPerTable))
-    lastTableGuestCount := int(math.Mod(guestCount, guestsPerTable))
+    guestsPerTable := 6
 
     fmt.Println("\nStatistics")
     fmt.Println("----------")
@@ -120,45 +213,31 @@ func main() {
     fmt.Println("Boys\t\t\t", maleCount)
     fmt.Println("Girls\t\t\t", femaleCount)
     fmt.Println("")
-    fmt.Println("Guest count:\t\t", guestCount)
     fmt.Println("Guests per table:\t", guestsPerTable)
-    fmt.Println("Table count:\t\t", tableCount)
-    fmt.Println("...one table with:\t", lastTableGuestCount)
     fmt.Println("")
 
-    tables := make([]Table, tableCount)
+    //guestList := flatten(units)
+    units = shuffle(units)
 
-    guestList := flatten(units)
-
-    start := 0
-    for i := 0; i < tableCount; i++ {
-        var count int
-
-        if i != tableCount-1 {
-            count = int(guestsPerTable)
-        } else {
-            count = int(lastTableGuestCount)
-        }
-
-        guests := guestList[start:start + count]
-        tables[i] = Table{Seats: count, Guests: guests}
-        start += count
-    }
+    tables := sitDownPlease(units, guestsPerTable)
 
     for i, table := range tables {
-        fmt.Println("Table", i + 1)
-        fmt.Println("-------")
-        females := 0
-        males := 0
-        for _, guest := range table.Guests {
-            fmt.Println(guest.Name)
-            if guest.Gender == "male" {
-                males = males + 1
-            } else {
-                females = females + 1
+        boys := 0
+        girls := 0
+
+        fmt.Println()
+        fmt.Printf("Table %d", i + 1)
+        fmt.Println()
+
+        for k, guest := range table.Guests {
+            fmt.Printf("\t%d. %s (%s)\n", k + 1, guest.Name, guest.Gender)
+            switch guest.Gender {
+                case "male": boys++
+                case "female": girls++
             }
         }
-        fmt.Printf("Girls: %d, Boys: %d\n", females, males)
-        fmt.Println("")
+
+        fmt.Printf("M: %d, F: %d", boys, girls)
+        fmt.Println()
     }
 }
